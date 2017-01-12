@@ -199,6 +199,8 @@ static int __init globalmem_init(void)
 		ret = -ENOMEM;
 		goto fail_class;
 	}
+	for (i = 0; i < DEVICE_NUM; i++)
+		device_create(globalmem_devp->cclass, NULL, MKDEV(globalmem_major, i), NULL,"globalmem%d", i);
 	return 0;
 
 fail_class:
@@ -212,6 +214,8 @@ fail_malloc:
 static void __exit globalmem_exit(void)
 {
 	int i;
+	for (i = 0; i < DEVICE_NUM; i++)
+		device_destroy(globalmem_devp->cclass, MKDEV(globalmem_major, i));
 	class_destroy(globalmem_devp->cclass);
 	for (i = 0; i < DEVICE_NUM; i++)
 		cdev_del(&(globalmem_devp + i)->cdev);
@@ -225,13 +229,3 @@ module_exit(globalmem_exit);
 
 MODULE_AUTHOR("Xu Zhoubin <zhoubin.xu@foxmail.com>");
 MODULE_LICENSE("GPL");
-
-
-
-
-
-
-
-
-
-
