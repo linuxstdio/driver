@@ -197,10 +197,12 @@ static int __init globalmem_init(void)
 	globalmem_devp->cclass = class_create(THIS_MODULE,"globalmem");
 	if (IS_ERR(globalmem_devp->cclass)) {
 		ret = -ENOMEM;
-		goto fail_malloc;
+		goto fail_class;
 	}
 	return 0;
 
+fail_class:
+	class_destroy(globalmem_devp->cclass);
 fail_malloc:
 	unregister_chrdev_region(devno, DEVICE_NUM);
 	return ret;
@@ -210,6 +212,7 @@ fail_malloc:
 static void __exit globalmem_exit(void)
 {
 	int i;
+	class_destroy(globalmem_devp->cclass);
 	for (i = 0; i < DEVICE_NUM; i++)
 		cdev_del(&(globalmem_devp + i)->cdev);
 	kfree(globalmem_devp);
