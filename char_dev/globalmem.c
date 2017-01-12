@@ -4,6 +4,7 @@
 #include <linux/cdev.h>
 #include <linux/uaccess.h>
 #include <linux/slab.h>
+#include <linux/platform_device.h>
 
 #define GLOBALMEM_SIZE 0x1000
 
@@ -18,6 +19,8 @@ module_param(globalmem_major, int, S_IRUGO);
 
 struct globalmem_dev {
 	struct cdev cdev;
+	struct device sdev;
+	struct class *cclass;
 	unsigned char mem[GLOBALMEM_SIZE];
 	struct mutex mutex;
 };
@@ -183,7 +186,7 @@ static int __init globalmem_init(void)
 
 	globalmem_devp = kzalloc(sizeof(struct globalmem_dev), GFP_KERNEL);
 	if (!globalmem_devp) {
-		ret = - ENOMEM;
+		ret = -ENOMEM;
 		goto fail_malloc;
 	}
 	mutex_init(&globalmem_devp->mutex);
@@ -191,6 +194,11 @@ static int __init globalmem_init(void)
 	for (i = 0; i < DEVICE_NUM; i++)
 		globalmem_setup_cdev(globalmem_devp + i, i);
 
+	globalmem_devp->cclass = class_create(THIS_MODULE,"globalmem");
+	if (IS_ERR(globalmem_devp->cclass)) {
+		ret = -ENOMEM;
+		goto fail_malloc;
+	}
 	return 0;
 
 fail_malloc:
@@ -213,7 +221,7 @@ module_exit(globalmem_exit);
 
 
 MODULE_AUTHOR("Xu Zhoubin <zhoubin.xu@foxmail.com>");
-MODULE_LICENSE("GPL V2");
+MODULE_LICENSE("GPL");
 
 
 
